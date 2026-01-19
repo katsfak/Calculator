@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/calculator_background"
+    tools:context=".MainActivity">
+
+    <!-- Display Area -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="bottom|end">
+
+        <!-- Secondary Display (Previous calculation) -->
+        <TextView
+            android:id="@+id/tvSecondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/text_secondary"
+            android:textSize="24sp"
+            android:gravity="end"
+            android:paddingBottom="8dp"/>
+
+        <!-- Main Display -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
+            
+            <TextView
+                android:id="@+id/tvDisplay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textColor="@color/text_primary"
+                android:textSize="64sp"
+                android:maxLines="1"/>
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- Scientific Mode Toggle -->
+    <HorizontalScrollView
+        android:id="@+id/scientificPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:background="@color/display_background"
+        android:scrollbars="none">
+        
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <!-- Scientific Functions Row -->
+            <Button
+                android:id="@+id/btnSin"
+                style="@style/ScientificButtonStyle"
+                android:text="sin"/>
+
+            <Button
+                android:id="@+id/btnCos"
+                style="@style/ScientificButtonStyle"
+                android:text="cos"/>
+
+            <Button
+                android:id="@+id/btnTan"
+                style="@style/ScientificButtonStyle"
+                android:text="tan"/>
+
+            <Button
+                android:id="@+id/btnLog"
+                style="@style/ScientificButtonStyle"
+                android:text="log"/>
+
+            <Button
+                android:id="@+id/btnLn"
+                style="@style/ScientificButtonStyle"
+                android:text="ln"/>
+
+            <Button
+                android:id="@+id/btnSqrt"
+                style="@style/ScientificButtonStyle"
+                android:text="√"/>
+
+            <Button
+                android:id="@+id/btnPi"
+                style="@style/ScientificButtonStyle"
+                android:text="π"/>
+
+            <Button
+                android:id="@+id/btnE"
+                style="@style/ScientificButtonStyle"
+                android:text="e"/>
+
+            <Button
+                android:id="@+id/btnFactorial"
+                style="@style/ScientificButtonStyle"
+                android:text="x!"/>
+
+            <Button
+                android:id="@+id/btnPower"
+                style="@style/ScientificButtonStyle"
+                android:text="x^y"/>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Button Grid -->
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="4"
+        android:rowCount="6"
+        android:padding="8dp">
+
+        <!-- Row 1: Function buttons -->
+        <Button
+            android:id="@+id/btnAC"
+            style="@style/FunctionButtonStyle"
+            android:text="AC"/>
+
+        <Button
+            android:id="@+id/btnParenthesis"
+            style="@style/FunctionButtonStyle"
+            android:text="( )"/>
+
+        <Button
+            android:id="@+id/btnPercent"
+            style="@style/FunctionButtonStyle"
+            android:text="%"/>
+
+        <Button
+            android:id="@+id/btnDivide"
+            style="@style/OperatorButtonStyle"
+            android:text="÷"/>
+
+        <!-- Row 2 -->
+        <Button
+            android:id="@+id/btn7"
+            style="@style/NumberButtonStyle"
+            android:text="7"/>
+
+        <Button
+            android:id="@+id/btn8"
+            style="@style/NumberButtonStyle"
+            android:text="8"/>
+
+        <Button
+            android:id="@+id/btn9"
+            style="@style/NumberButtonStyle"
+            android:text="9"/>
+
+        <Button
+            android:id="@+id/btnMultiply"
+            style="@style/OperatorButtonStyle"
+            android:text="×"/>
+
+        <!-- Row 3 -->
+        <Button
+            android:id="@+id/btn4"
+            style="@style/NumberButtonStyle"
+            android:text="4"/>
+
+        <Button
+            android:id="@+id/btn5"
+            style="@style/NumberButtonStyle"
+            android:text="5"/>
+
+        <Button
+            android:id="@+id/btn6"
+            style="@style/NumberButtonStyle"
+            android:text="6"/>
+
+        <Button
+            android:id="@+id/btnMinus"
+            style="@style/OperatorButtonStyle"
+            android:text="−"/>
+
+        <!-- Row 4 -->
+        <Button
+            android:id="@+id/btn1"
+            style="@style/NumberButtonStyle"
+            android:text="1"/>
+
+        <Button
+            android:id="@+id/btn2"
+            style="@style/NumberButtonStyle"
+            android:text="2"/>
+
+        <Button
+            android:id="@+id/btn3"
+            style="@style/NumberButtonStyle"
+            android:text="3"/>
+
+        <Button
+            android:id="@+id/btnPlus"
+            style="@style/OperatorButtonStyle"
+            android:text="+"/>
+
+        <!-- Row 5 -->
+        <Button
+            android:id="@+id/btnToggleScientific"
+            style="@style/NumberButtonStyle"
+            android:text="SCI"
+            android:textSize="16sp"/>
+
+        <Button
+            android:id="@+id/btn0"
+            style="@style/NumberButtonStyle"
+            android:text="0"/>
+
+        <Button
+            android:id="@+id/btnDot"
+            style="@style/NumberButtonStyle"
+            android:text="."/>
+
+        <Button
+            android:id="@+id/btnEquals"
+            style="@style/OperatorButtonStyle"
+            android:text="="/>
+
+    </GridLayout>
+
+</LinearLayout>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme-aware colors for Dark Mode -->
+    <color name="calculator_background">@color/background_dark</color>
+    <color name="display_background">@color/display_background_dark</color>
+    <color name="button_number">@color/button_number_dark</color>
+    <color name="button_operator">@color/button_operator_dark</color>
+    <color name="button_function">@color/button_function_dark</color>
+    <color name="text_primary">@color/text_primary_dark</color>
+    <color name="text_secondary">@color/text_secondary_dark</color>
+</resources>

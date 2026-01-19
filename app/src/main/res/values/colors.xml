@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <!-- Light Mode Calculator Colors -->
+    <color name="background_light">#F5F5F5</color>
+    <color name="display_background_light">#FFFFFF</color>
+    <color name="button_number_light">#E0E0E0</color>
+    <color name="button_operator_light">#FF9F0A</color>
+    <color name="button_function_light">#D0D0D0</color>
+    <color name="text_primary_light">#000000</color>
+    <color name="text_secondary_light">#666666</color>
+    
+    <!-- Dark Mode Calculator Colors -->
+    <color name="background_dark">#1C1C1E</color>
+    <color name="display_background_dark">#2C2C2E</color>
+    <color name="button_number_dark">#505053</color>
+    <color name="button_operator_dark">#FF9F0A</color>
+    <color name="button_function_dark">#3A3A3C</color>
+    <color name="text_primary_dark">#FFFFFF</color>
+    <color name="text_secondary_dark">#9E9E9E</color>
+</resources>
