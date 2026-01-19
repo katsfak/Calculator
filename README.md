@@ -89,7 +89,7 @@ _Extended scientific functions panel_
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/calculator.git
+git clone https://github.com/katsfak/Calculator.git
 
 # Navigate to the project directory
 cd Calculator
