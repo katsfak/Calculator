@@ -17,6 +17,8 @@ A modern, feature-rich Android calculator application inspired by Samsung's calc
 - **Clear Function (AC)**: Reset all calculations instantly
 - **Chain Operations**: Perform multiple operations in sequence
 - **Error Handling**: Smart division by zero and invalid operation detection
+- **Parenthesis Support**: Full parenthesis evaluation with proper precedence
+- **Operator Precedence**: PEMDAS/BODMAS with proper expression evaluation
 
 ### 🔬 Scientific Functions
 
@@ -148,6 +150,10 @@ export PATH=$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools
 4. **Chain Operations**: Continue calculating without clearing
 5. **Clear**: Tap `AC` to reset everything
 6. **Percentage**: Enter a number and tap `%` to convert to percentage
+7. **Parenthesis**: Use `()` for grouping operations with proper precedence
+   - Tap the parenthesis button to add opening parenthesis
+   - Tap again to add closing parenthesis
+   - Example: `(2 + 3) × 4 = 20` (instead of just `2 + 3 × 4 = 14`)
 
 ### Scientific Functions
 
@@ -270,22 +276,13 @@ Example: 5 + 3 × 2 = (auto-calculates 5+3=8, then 8×2=16)
 
 ## 🐛 Known Issues & Limitations
 
-- Parenthesis functionality is for display only (not fully functional)
 - Factorial limited to integers 0-20 to prevent overflow
 - Trigonometric functions use degree input (not radians)
-- Chain operations follow left-to-right precedence (no PEMDAS/BODMAS)
 
 ## 🚧 Future Enhancements
 
-- [ ] Full parenthesis evaluation support
-- [ ] History of calculations
-- [ ] Copy/paste functionality
 - [ ] Landscape mode with more functions
-- [ ] Radians/Degrees toggle for trigonometric functions
 - [ ] Memory functions (M+, M-, MR, MC)
-- [ ] Haptic feedback on button presses
-- [ ] Custom themes and color schemes
-- [ ] Expression evaluation with proper operator precedence
 
 ## 🤝 Contributing
 

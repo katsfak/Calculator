@@ -5,10 +5,17 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.content.ClipboardManager;
+import android.content.ClipData;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.app.AlertDialog;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.DecimalFormat;
+import java.util.*;
 
 /**
  * MainActivity - Samsung-style Calculator Application
@@ -34,9 +41,14 @@ public class MainActivity extends AppCompatActivity {
     private boolean isScientificMode = false; // Flag indicating if scientific mode is active
     private boolean lastInputWasOperator = false; // Tracks if last button pressed was an operator
     private int openParenthesisCount = 0; // Counter for unmatched parentheses
+    private String fullExpression = "";   // Full expression for precedence evaluation
 
     // Formatter for displaying numbers with proper decimal places
     private final DecimalFormat decimalFormat = new DecimalFormat("#.##########");
+
+    // History Manangment
+    private ArrayList<String> calculationHistory;  // Store all calculations
+    private static final int MAX_HISTORY = 50;     // Limit history to 50 items
 
     /**
      * Called when the activity is first created Initializes UI components and
@@ -51,12 +63,27 @@ public class MainActivity extends AppCompatActivity {
         tvDisplay = findViewById(R.id.tvDisplay);
         tvSecondary = findViewById(R.id.tvSecondary);
         scientificPanel = findViewById(R.id.scientificPanel);
+        calculationHistory = new ArrayList<>();
+        
+        // Load history from storage
+        loadHistoryFromStorage();
 
         // Set up all button click listeners
         setupNumberButtons();
         setupOperatorButtons();
         setupFunctionButtons();
         setupScientificButtons();
+        setupCopyPasteGestures();
+
+    }
+
+    /**
+     * Called when activity is paused - saves history to storage
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        saveHistoryToStorage();
     }
 
     /**
@@ -91,6 +118,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnMultiply).setOnClickListener(v -> setOperator("×"));
         findViewById(R.id.btnDivide).setOnClickListener(v -> setOperator("÷"));
         findViewById(R.id.btnEquals).setOnClickListener(v -> calculateResult());
+        // Add this for a History button if you have one
+        findViewById(R.id.btnHistory).setOnClickListener(v -> showHistory());
     }
 
     /**
@@ -158,84 +187,63 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param op The operator symbol (+, -, ×, ÷, ^)
      *
-     * Behavior: - If there's a pending operation, calculate it first (chain
-     * operations) - Store the first operand and operator - Allow changing
-     * operator if user presses different operator consecutively
+     * Behavior: - Build expression with proper precedence handling
+     * - Display the expression so far
      */
     private void setOperator(String op) {
         if (!currentNumber.isEmpty() && !lastInputWasOperator) {
-            // If there's already an operator, calculate the pending operation first
-            if (!operator.isEmpty()) {
-                calculateResult();
-            }
-            // Store the first operand and set the new operator
-            firstOperand = Double.parseDouble(currentNumber);
-            operator = op;
-            tvSecondary.setText(formatNumber(firstOperand) + " " + operator);
+            // Add current number to expression
+            fullExpression += currentNumber + " " + op + " ";
+            tvSecondary.setText(fullExpression);
+            currentNumber = "";
             isNewOperation = true;
             lastInputWasOperator = true;
         } else if (!operator.isEmpty() && lastInputWasOperator) {
             // Allow changing operator if user presses different operator button
-            operator = op;
-            tvSecondary.setText(formatNumber(firstOperand) + " " + operator);
+            fullExpression = fullExpression.substring(0, fullExpression.lastIndexOf(op)) + op + " ";
+            tvSecondary.setText(fullExpression);
         }
+        operator = op;
     }
 
     /**
      * Calculates and displays the result of the current operation
+     * Uses proper operator precedence (PEMDAS/BODMAS)
      *
      * Supports: - Addition, subtraction, multiplication, division -
-     * Power/exponentiation - Division by zero error handling - Chaining
-     * operations
+     * Power/exponentiation - Division by zero error handling - Proper precedence
      */
     private void calculateResult() {
-        // Ensure we have both operands and an operator
-        if (currentNumber.isEmpty() || operator.isEmpty()) {
+        // Ensure we have an expression to evaluate
+        if (currentNumber.isEmpty() && operator.isEmpty()) {
             return;
         }
 
         try {
-            double secondOperand = Double.parseDouble(currentNumber);
-            double result = 0;
-
-            // Perform the calculation based on the operator
-            switch (operator) {
-                case "+":
-                    result = firstOperand + secondOperand;
-                    break;
-                case "-":
-                    result = firstOperand - secondOperand;
-                    break;
-                case "×":
-                    result = firstOperand * secondOperand;
-                    break;
-                case "÷":
-                    // Check for division by zero
-                    if (secondOperand != 0) {
-                        result = firstOperand / secondOperand;
-                    } else {
-                        updateDisplay("Error");
-                        return;
-                    }
-                    break;
-                case "^":
-                    // Power/exponentiation operation
-                    result = Math.pow(firstOperand, secondOperand);
-                    break;
-            }
-
+            // Complete the expression with the current number
+            String completeExpression = fullExpression + currentNumber;
+            
+            // Evaluate with proper precedence
+            double result = evaluateExpression(completeExpression);
+            
             // Format and display the result
             String resultStr = formatNumber(result);
-            tvSecondary.setText(formatNumber(firstOperand) + " " + operator + " " + formatNumber(secondOperand));
+            tvSecondary.setText(completeExpression);
             updateDisplay(resultStr);
+            
+            // Add to history
+            String historyEntry = completeExpression + " = " + resultStr;
+            addToHistory(historyEntry);
 
-            // Store result for potential chaining
+            // Reset for next calculation
             currentNumber = resultStr;
+            fullExpression = "";
             operator = "";
             isNewOperation = true;
             lastInputWasOperator = false;
         } catch (Exception e) {
             updateDisplay("Error");
+            fullExpression = "";
         }
     }
 
@@ -408,23 +416,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Handles parenthesis input
+     * Handles parenthesis input with full evaluation support
      *
-     * Simple implementation: - Adds opening parenthesis when count is 0 or
-     * after an operator - Adds closing parenthesis otherwise - Tracks count of
-     * unmatched opening parentheses
-     *
-     * Note: This is a simplified version for display purposes only
+     * Behavior: - Adds opening parenthesis when count is 0 or after an operator
+     * - Adds closing parenthesis to close open groups
+     * - Tracks count of unmatched opening parentheses
+     * - Parentheses are part of the expression and evaluated properly
      */
     private void handleParenthesis() {
         if (openParenthesisCount == 0 || lastInputWasOperator) {
-            currentNumber += "(";
+            // Add opening parenthesis
+            if (!currentNumber.isEmpty()) {
+                fullExpression += currentNumber + " ( ";
+            } else {
+                fullExpression += "( ";
+            }
+            currentNumber = "";
             openParenthesisCount++;
-        } else {
-            currentNumber += ")";
+            lastInputWasOperator = false;
+        } else if (openParenthesisCount > 0) {
+            // Add closing parenthesis
+            if (!currentNumber.isEmpty()) {
+                fullExpression += currentNumber + " ) ";
+            } else {
+                fullExpression += " ) ";
+            }
+            currentNumber = "";
             openParenthesisCount--;
+            lastInputWasOperator = false;
         }
-        updateDisplay(currentNumber);
+        
+        // Display the expression with parentheses
+        String displayText = fullExpression + currentNumber;
+        tvSecondary.setText(displayText);
+        updateDisplay(displayText);
     }
 
     /**
@@ -452,6 +477,7 @@ public class MainActivity extends AppCompatActivity {
         currentNumber = "";
         operator = "";
         firstOperand = 0;
+        fullExpression = "";
         isNewOperation = true;
         lastInputWasOperator = false;
         openParenthesisCount = 0;
@@ -488,4 +514,288 @@ public class MainActivity extends AppCompatActivity {
     private void updateDisplay(String text) {
         tvDisplay.setText(text);
     }
+
+    /**
+     * Sets up long-press gestures on display for copy and paste functionality
+     */
+    private void setupCopyPasteGestures() {
+        // Long-press on display to copy/paste using context menu
+        tvDisplay.setOnLongClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("Display Actions")
+                    .setItems(new CharSequence[]{"Copy", "Paste"}, (dialog, which) -> {
+                if (which == 0) {
+                    copyToClipboard();
+                } else if (which == 1) {
+                    pasteFromClipboard();
+                }
+            })
+                    .show();
+            return true;
+        });
+    }
+
+    /**
+     * Copies the current display value to clipboard
+     */
+    private void copyToClipboard() {
+        String textToCopy = tvDisplay.getText().toString();
+        if (!textToCopy.isEmpty() && !textToCopy.equals("0") && !textToCopy.equals("Error")) {
+            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("Calculator Result", textToCopy);
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(this, "Copied: " + textToCopy, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Pastes value from clipboard to the display
+     */
+    private void pasteFromClipboard() {
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+
+        if (clipboard != null && clipboard.hasPrimaryClip()) {
+            ClipData.Item item = clipboard.getPrimaryClip().getItemAt(0);
+            String pastedText = item.getText().toString().trim();
+
+            // Validate that pasted text is a valid number
+            try {
+                Double.parseDouble(pastedText);
+                // If it's a valid number, set it to display
+                currentNumber = pastedText;
+                isNewOperation = true;
+                updateDisplay(currentNumber);
+                Toast.makeText(this, "Pasted: " + pastedText, Toast.LENGTH_SHORT).show();
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Invalid number in clipboard", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(this, "Clipboard is empty", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Records a calculation to history
+     *
+     * @param calculation The calculation string (e.g., "12 + 5 = 17")
+     */
+    private void addToHistory(String calculation) {
+        if (calculationHistory.size() >= MAX_HISTORY) {
+            calculationHistory.remove(0); // Remove oldest entry to maintain size
+        }
+        calculationHistory.add(calculation);
+    }
+
+    /**
+     * Shows calculation history in a dialog
+     */
+    private void showHistory() {
+        if (calculationHistory.isEmpty()) {
+            Toast.makeText(this, "No history yet", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Convert ArrayList to array for dialog
+        String[] historyArray = calculationHistory.toArray(new String[0]);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Calculation History")
+                .setItems(historyArray, (dialog, which) -> {
+                    // Click item to paste result back to display
+                    String selectedEntry = historyArray[which];
+                    // Extract the result (after "=")
+                    String result = selectedEntry.substring(selectedEntry.lastIndexOf("=") + 1).trim();
+                    currentNumber = result;
+                    isNewOperation = true;
+                    updateDisplay(currentNumber);
+                    Toast.makeText(MainActivity.this, "Loaded: " + result, Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Clear History", (dialog, which) -> {
+                    calculationHistory.clear();
+                    saveHistoryToStorage();
+                    Toast.makeText(MainActivity.this, "History cleared", Toast.LENGTH_SHORT).show();
+                })
+                .setPositiveButton("Close", null)
+                .show();
+    }
+
+    /**
+     * Saves history to SharedPreferences storage
+     */
+    private void saveHistoryToStorage() {
+        SharedPreferences prefs = getSharedPreferences("calculator_prefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt("history_count", calculationHistory.size());
+
+        for (int i = 0; i < calculationHistory.size(); i++) {
+            editor.putString("history_" + i, calculationHistory.get(i));
+        }
+        editor.apply();
+    }
+
+    /**
+     * Loads history from SharedPreferences storage
+     */
+    private void loadHistoryFromStorage() {
+        SharedPreferences prefs = getSharedPreferences("calculator_prefs", MODE_PRIVATE);
+        int count = prefs.getInt("history_count", 0);
+
+        for (int i = 0; i < count; i++) {
+            String entry = prefs.getString("history_" + i, "");
+            if (!entry.isEmpty()) {
+                calculationHistory.add(entry);
+            }
+        }
+    }
+
+    // ===== Expression Evaluation with Proper Operator Precedence =====
+
+    /**
+     * Evaluates a complete expression with proper operator precedence
+     * PEMDAS/BODMAS: Parentheses, Exponents, Multiplication/Division, Addition/Subtraction
+     * 
+     * @param expression The mathematical expression to evaluate
+     * @return The result of the evaluation
+     */
+    private double evaluateExpression(String expression) throws Exception {
+        expression = expression.replaceAll("\\s+", ""); // Remove spaces
+        expression = expression.replace("×", "*").replace("÷", "/"); // Normalize operators
+        ExpressionEvaluator evaluator = new ExpressionEvaluator(expression);
+        return evaluator.evaluate();
+    }
+
+    /**
+     * Expression parser and evaluator using recursive descent parsing
+     * Implements proper operator precedence
+     */
+    private class ExpressionEvaluator {
+        private String expression;
+        private int position = 0;
+
+        ExpressionEvaluator(String expr) {
+            this.expression = expr;
+        }
+
+        /**
+         * Main evaluation method - starts with lowest precedence (addition/subtraction)
+         */
+        double evaluate() throws Exception {
+            return parseAdditionSubtraction();
+        }
+
+        /**
+         * Handles addition and subtraction (lowest precedence)
+         */
+        private double parseAdditionSubtraction() throws Exception {
+            double result = parseMultiplicationDivision();
+
+            while (position < expression.length() && (peek() == '+' || peek() == '-')) {
+                char operator = expression.charAt(position++);
+                double right = parseMultiplicationDivision();
+
+                if (operator == '+') {
+                    result += right;
+                } else {
+                    result -= right;
+                }
+            }
+            return result;
+        }
+
+        /**
+         * Handles multiplication and division (medium precedence)
+         */
+        private double parseMultiplicationDivision() throws Exception {
+            double result = parseExponentiation();
+
+            while (position < expression.length() && (peek() == '*' || peek() == '/')) {
+                char operator = expression.charAt(position++);
+                double right = parseExponentiation();
+
+                if (operator == '*') {
+                    result *= right;
+                } else {
+                    if (right == 0) {
+                        throw new Exception("Division by zero");
+                    }
+                    result /= right;
+                }
+            }
+            return result;
+        }
+
+        /**
+         * Handles exponentiation (higher precedence, right-associative)
+         */
+        private double parseExponentiation() throws Exception {
+            double result = parseUnary();
+
+            if (position < expression.length() && peek() == '^') {
+                position++; // consume '^'
+                double right = parseExponentiation(); // Right-associative
+                result = Math.pow(result, right);
+            }
+            return result;
+        }
+
+        /**
+         * Handles unary operations (negative numbers)
+         */
+        private double parseUnary() throws Exception {
+            if (position < expression.length() && peek() == '-') {
+                position++;
+                return -parseUnary();
+            }
+            if (position < expression.length() && peek() == '+') {
+                position++;
+                return parseUnary();
+            }
+            return parsePrimary();
+        }
+
+        /**
+         * Handles parentheses and numbers (highest precedence)
+         */
+        private double parsePrimary() throws Exception {
+            if (position < expression.length() && peek() == '(') {
+                position++; // consume '('
+                double result = parseAdditionSubtraction();
+                if (position >= expression.length() || peek() != ')') {
+                    throw new Exception("Mismatched parentheses");
+                }
+                position++; // consume ')'
+                return result;
+            }
+            return parseNumber();
+        }
+
+        /**
+         * Parses a number (integer or decimal)
+         */
+        private double parseNumber() throws Exception {
+            StringBuilder number = new StringBuilder();
+
+            while (position < expression.length() && 
+                   (Character.isDigit(peek()) || peek() == '.')) {
+                number.append(expression.charAt(position++));
+            }
+
+            if (number.length() == 0) {
+                throw new Exception("Invalid expression");
+            }
+
+            return Double.parseDouble(number.toString());
+        }
+
+        /**
+         * Peeks at the current character without consuming it
+         */
+        private char peek() {
+            if (position >= expression.length()) {
+                return '\0';
+            }
+            return expression.charAt(position);
+        }
+    }
+
 }
