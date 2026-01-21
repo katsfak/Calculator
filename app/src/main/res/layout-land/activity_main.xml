@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="@color/calculator_background"
+    tools:context=".MainActivity">
+
+    <!-- Left Side: Display Area -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.4"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:gravity="bottom|end">
+
+        <!-- Secondary Display (Previous calculation) -->
+        <TextView
+            android:id="@+id/tvSecondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/text_secondary"
+            android:textSize="18sp"
+            android:gravity="end"
+            android:paddingBottom="8dp"/>
+
+        <!-- Main Display -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
+            
+            <TextView
+                android:id="@+id/tvDisplay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textColor="@color/text_primary"
+                android:textSize="48sp"
+                android:maxLines="1"/>
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- Right Side: Controls -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.6"
+        android:orientation="vertical">
+
+        <!-- Scientific Mode Toggle -->
+        <HorizontalScrollView
+            android:id="@+id/scientificPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:background="@color/display_background"
+            android:scrollbars="none">
+            
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="4dp">
+
+                <!-- Scientific Functions Row -->
+                <Button
+                    android:id="@+id/btnSin"
+                    style="@style/ScientificButtonStyle"
+                    android:text="sin"/>
+
+                <Button
+                    android:id="@+id/btnCos"
+                    style="@style/ScientificButtonStyle"
+                    android:text="cos"/>
+
+                <Button
+                    android:id="@+id/btnTan"
+                    style="@style/ScientificButtonStyle"
+                    android:text="tan"/>
+
+                <Button
+                    android:id="@+id/btnLog"
+                    style="@style/ScientificButtonStyle"
+                    android:text="log"/>
+
+                <Button
+                    android:id="@+id/btnLn"
+                    style="@style/ScientificButtonStyle"
+                    android:text="ln"/>
+
+                <Button
+                    android:id="@+id/btnSqrt"
+                    style="@style/ScientificButtonStyle"
+                    android:text="√"/>
+
+                <Button
+                    android:id="@+id/btnPi"
+                    style="@style/ScientificButtonStyle"
+                    android:text="π"/>
+
+                <Button
+                    android:id="@+id/btnE"
+                    style="@style/ScientificButtonStyle"
+                    android:text="e"/>
+
+                <Button
+                    android:id="@+id/btnFactorial"
+                    style="@style/ScientificButtonStyle"
+                    android:text="x!"/>
+
+                <Button
+                    android:id="@+id/btnPower"
+                    style="@style/ScientificButtonStyle"
+                    android:text="x^y"/>
+
+                <!-- Additional Landscape Functions -->
+                <Button
+                    android:id="@+id/btnReciprocal"
+                    style="@style/ScientificButtonStyle"
+                    android:text="1/x"/>
+
+                <Button
+                    android:id="@+id/btnSquare"
+                    style="@style/ScientificButtonStyle"
+                    android:text="x²"/>
+
+                <Button
+                    android:id="@+id/btnCube"
+                    style="@style/ScientificButtonStyle"
+                    android:text="x³"/>
+
+                <Button
+                    android:id="@+id/btnAbsolute"
+                    style="@style/ScientificButtonStyle"
+                    android:text="|x|"/>
+
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <!-- Memory Functions Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="4dp"
+            android:background="@color/display_background">
+
+            <Button
+                android:id="@+id/btnMemoryAdd"
+                style="@style/MemoryButtonStyle"
+                android:text="M+"
+                android:layout_weight="1"/>
+
+            <Button
+                android:id="@+id/btnMemorySubtract"
+                style="@style/MemoryButtonStyle"
+                android:text="M−"
+                android:layout_weight="1"/>
+
+            <Button
+                android:id="@+id/btnMemoryRecall"
+                style="@style/MemoryButtonStyle"
+                android:text="MR"
+                android:layout_weight="1"/>
+
+            <Button
+                android:id="@+id/btnMemoryClear"
+                style="@style/MemoryButtonStyle"
+                android:text="MC"
+                android:layout_weight="1"/>
+
+        </LinearLayout>
+
+        <!-- Button Grid for Landscape -->
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:columnCount="5"
+            android:rowCount="5"
+            android:padding="4dp">
+
+            <!-- Row 1: Function buttons -->
+            <Button
+                android:id="@+id/btnAC"
+                style="@style/LandscapeFunctionButtonStyle"
+                android:text="AC"/>
+
+            <Button
+                android:id="@+id/btnHistory"
+                style="@style/LandscapeFunctionButtonStyle"
+                android:text="Hist"/>
+
+            <Button
+                android:id="@+id/btnPercent"
+                style="@style/LandscapeFunctionButtonStyle"
+                android:text="%"/>
+
+            <Button
+                android:id="@+id/btnDivide"
+                style="@style/LandscapeOperatorButtonStyle"
+                android:text="÷"/>
+
+            <Button
+                android:id="@+id/btnToggleScientific"
+                style="@style/LandscapeFunctionButtonStyle"
+                android:text="SCI"
+                android:textSize="12sp"/>
+
+            <!-- Row 2 -->
+            <Button
+                android:id="@+id/btn7"
+                style="@style/LandscapeNumberButtonStyle"
+                android:text="7"/>
+
+            <Button
+                android:id="@+id/btn8"
+                style="@style/LandscapeNumberButtonStyle"
+                android:text="8"/>
+
+            <Button
+                android:id="@+id/btn9"
+                style="@style/LandscapeNumberButtonStyle"
+                android:text="9"/>
+
+            <Button
+                android:id="@+id/btnMultiply"
+                style="@style/LandscapeOperatorButtonStyle"
+                android:text="×"/>
+
+            <Button
+                android:id="@+id/btnBackspace"
+                style="@style/LandscapeFunctionButtonStyle"
+                android:text="⌫"/>
+
+            <!-- Row 3 -->
+            <Button
+                android:id="@+id/btn4"
+                style="@style/LandscapeNumberButtonStyle"
+                android:text="4"/>
+
+            <Button
+                android:id="@+id/btn5"
+                style="@style/LandscapeNumberButtonStyle"
+                android:text="5"/>
+
+            <Button
+                android:id="@+id/btn6"
+                style="@style/LandscapeNumberButtonStyle"
+                android:text="6"/>
+
+            <Button
+                android:id="@+id/btnMinus"
+                style="@style/LandscapeOperatorButtonStyle"
+                android:text="−"/>
+
+            <Button
+                android:id="@+id/btnNegate"
+                style="@style/LandscapeFunctionButtonStyle"
+                android:text="+/−"/>
+
+            <!-- Row 4 -->
+            <Button
+                android:id="@+id/btn1"
+                style="@style/LandscapeNumberButtonStyle"
+                android:text="1"/>
+
+            <Button
+                android:id="@+id/btn2"
+                style="@style/LandscapeNumberButtonStyle"
+                android:text="2"/>
+
+            <Button
+                android:id="@+id/btn3"
+                style="@style/LandscapeNumberButtonStyle"
+                android:text="3"/>
+
+            <Button
+                android:id="@+id/btnPlus"
+                style="@style/LandscapeOperatorButtonStyle"
+                android:text="+"/>
+
+            <Button
+                android:id="@+id/btnParenthesis"
+                style="@style/LandscapeFunctionButtonStyle"
+                android:text="( )"/>
+
+            <!-- Row 5 -->
+            <Button
+                android:id="@+id/btn0"
+                style="@style/LandscapeNumberButtonStyle"
+                android:layout_columnSpan="2"
+                android:text="0"/>
+
+            <Button
+                android:id="@+id/btnDot"
+                style="@style/LandscapeNumberButtonStyle"
+                android:text="."/>
+
+            <Button
+                android:id="@+id/btnEquals"
+                style="@style/LandscapeOperatorButtonStyle"
+                android:layout_columnSpan="2"
+                android:text="="/>
+
+        </GridLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -50,6 +50,11 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> calculationHistory;  // Store all calculations
     private static final int MAX_HISTORY = 50;     // Limit history to 50 items
 
+    // Memory Management
+    private double memoryValue = 0;                // Store value in memory
+    private boolean hasMemory = false;             // Flag indicating if memory contains a value
+    private Button btnMemoryIndicator;             // Button to show memory status
+
     /**
      * Called when the activity is first created Initializes UI components and
      * sets up all button listeners
@@ -64,26 +69,30 @@ public class MainActivity extends AppCompatActivity {
         tvSecondary = findViewById(R.id.tvSecondary);
         scientificPanel = findViewById(R.id.scientificPanel);
         calculationHistory = new ArrayList<>();
-        
-        // Load history from storage
+
+        // Load history and memory from storage
         loadHistoryFromStorage();
+        loadMemoryFromStorage();
 
         // Set up all button click listeners
         setupNumberButtons();
         setupOperatorButtons();
         setupFunctionButtons();
         setupScientificButtons();
+        setupMemoryButtons();
+        setupLandscapeButtons();
         setupCopyPasteGestures();
 
     }
 
     /**
-     * Called when activity is paused - saves history to storage
+     * Called when activity is paused - saves history and memory to storage
      */
     @Override
     protected void onPause() {
         super.onPause();
         saveHistoryToStorage();
+        saveMemoryToStorage();
     }
 
     /**
@@ -129,8 +138,8 @@ public class MainActivity extends AppCompatActivity {
     private void setupFunctionButtons() {
         findViewById(R.id.btnAC).setOnClickListener(v -> clearAll());
         findViewById(R.id.btnPercent).setOnClickListener(v -> calculatePercent());
-        findViewById(R.id.btnParenthesis).setOnClickListener(v -> handleParenthesis());
         findViewById(R.id.btnToggleScientific).setOnClickListener(v -> toggleScientificMode());
+        findViewById(R.id.btnHistory).setOnClickListener(v -> showHistory());
     }
 
     /**
@@ -149,6 +158,59 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnE).setOnClickListener(v -> insertConstant(Math.E));
         findViewById(R.id.btnFactorial).setOnClickListener(v -> calculateFactorial());
         findViewById(R.id.btnPower).setOnClickListener(v -> setOperator("^"));
+    }
+
+    /**
+     * Sets up click listeners for memory function buttons Includes: M+ (memory
+     * add), M- (memory subtract), MR (memory recall), MC (memory clear)
+     */
+    private void setupMemoryButtons() {
+        findViewById(R.id.btnMemoryAdd).setOnClickListener(v -> memoryAdd());
+        findViewById(R.id.btnMemorySubtract).setOnClickListener(v -> memorySubtract());
+        findViewById(R.id.btnMemoryRecall).setOnClickListener(v -> memoryRecall());
+        findViewById(R.id.btnMemoryClear).setOnClickListener(v -> memoryClear());
+    }
+
+    /**
+     * Sets up click listeners for additional landscape mode buttons Includes:
+     * Backspace, Negate, Reciprocal, Square, Cube, Absolute Value, and
+     * Parenthesis
+     */
+    private void setupLandscapeButtons() {
+        Button btnBackspace = findViewById(R.id.btnBackspace);
+        if (btnBackspace != null) {
+            btnBackspace.setOnClickListener(v -> handleBackspace());
+        }
+
+        Button btnNegate = findViewById(R.id.btnNegate);
+        if (btnNegate != null) {
+            btnNegate.setOnClickListener(v -> handleNegate());
+        }
+
+        Button btnReciprocal = findViewById(R.id.btnReciprocal);
+        if (btnReciprocal != null) {
+            btnReciprocal.setOnClickListener(v -> calculateReciprocal());
+        }
+
+        Button btnSquare = findViewById(R.id.btnSquare);
+        if (btnSquare != null) {
+            btnSquare.setOnClickListener(v -> calculateSquare());
+        }
+
+        Button btnCube = findViewById(R.id.btnCube);
+        if (btnCube != null) {
+            btnCube.setOnClickListener(v -> calculateCube());
+        }
+
+        Button btnAbsolute = findViewById(R.id.btnAbsolute);
+        if (btnAbsolute != null) {
+            btnAbsolute.setOnClickListener(v -> calculateAbsolute());
+        }
+
+        Button btnParenthesis = findViewById(R.id.btnParenthesis);
+        if (btnParenthesis != null) {
+            btnParenthesis.setOnClickListener(v -> handleParenthesis());
+        }
     }
 
     /**
@@ -187,8 +249,8 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param op The operator symbol (+, -, ×, ÷, ^)
      *
-     * Behavior: - Build expression with proper precedence handling
-     * - Display the expression so far
+     * Behavior: - Build expression with proper precedence handling - Display
+     * the expression so far
      */
     private void setOperator(String op) {
         if (!currentNumber.isEmpty() && !lastInputWasOperator) {
@@ -207,11 +269,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Calculates and displays the result of the current operation
-     * Uses proper operator precedence (PEMDAS/BODMAS)
+     * Calculates and displays the result of the current operation Uses proper
+     * operator precedence (PEMDAS/BODMAS)
      *
      * Supports: - Addition, subtraction, multiplication, division -
-     * Power/exponentiation - Division by zero error handling - Proper precedence
+     * Power/exponentiation - Division by zero error handling - Proper
+     * precedence
      */
     private void calculateResult() {
         // Ensure we have an expression to evaluate
@@ -222,15 +285,15 @@ public class MainActivity extends AppCompatActivity {
         try {
             // Complete the expression with the current number
             String completeExpression = fullExpression + currentNumber;
-            
+
             // Evaluate with proper precedence
             double result = evaluateExpression(completeExpression);
-            
+
             // Format and display the result
             String resultStr = formatNumber(result);
             tvSecondary.setText(completeExpression);
             updateDisplay(resultStr);
-            
+
             // Add to history
             String historyEntry = completeExpression + " = " + resultStr;
             addToHistory(historyEntry);
@@ -413,43 +476,6 @@ public class MainActivity extends AppCompatActivity {
             currentNumber = constantStr;
         }
         updateDisplay(currentNumber);
-    }
-
-    /**
-     * Handles parenthesis input with full evaluation support
-     *
-     * Behavior: - Adds opening parenthesis when count is 0 or after an operator
-     * - Adds closing parenthesis to close open groups
-     * - Tracks count of unmatched opening parentheses
-     * - Parentheses are part of the expression and evaluated properly
-     */
-    private void handleParenthesis() {
-        if (openParenthesisCount == 0 || lastInputWasOperator) {
-            // Add opening parenthesis
-            if (!currentNumber.isEmpty()) {
-                fullExpression += currentNumber + " ( ";
-            } else {
-                fullExpression += "( ";
-            }
-            currentNumber = "";
-            openParenthesisCount++;
-            lastInputWasOperator = false;
-        } else if (openParenthesisCount > 0) {
-            // Add closing parenthesis
-            if (!currentNumber.isEmpty()) {
-                fullExpression += currentNumber + " ) ";
-            } else {
-                fullExpression += " ) ";
-            }
-            currentNumber = "";
-            openParenthesisCount--;
-            lastInputWasOperator = false;
-        }
-        
-        // Display the expression with parentheses
-        String displayText = fullExpression + currentNumber;
-        tvSecondary.setText(displayText);
-        updateDisplay(displayText);
     }
 
     /**
@@ -649,11 +675,252 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // ===== Expression Evaluation with Proper Operator Precedence =====
+    /**
+     * Adds current display value to memory (M+) Stores the current display
+     * value added to existing memory value
+     */
+    private void memoryAdd() {
+        if (!currentNumber.isEmpty()) {
+            try {
+                double value = Double.parseDouble(currentNumber);
+                memoryValue += value;
+                hasMemory = true;
+                saveMemoryToStorage();
+                Toast.makeText(this, "M+ : " + formatNumber(memoryValue), Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(this, "Invalid number", Toast.LENGTH_SHORT).show();
+            }
+        } else if (!operator.isEmpty()) {
+            // If in middle of calculation, use the result so far
+            Toast.makeText(this, "Complete current calculation first", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     /**
+     * Subtracts current display value from memory (M-) Stores the current
+     * display value subtracted from existing memory value
+     */
+    private void memorySubtract() {
+        if (!currentNumber.isEmpty()) {
+            try {
+                double value = Double.parseDouble(currentNumber);
+                memoryValue -= value;
+                hasMemory = true;
+                saveMemoryToStorage();
+                Toast.makeText(this, "M− : " + formatNumber(memoryValue), Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(this, "Invalid number", Toast.LENGTH_SHORT).show();
+            }
+        } else if (!operator.isEmpty()) {
+            // If in middle of calculation, use the result so far
+            Toast.makeText(this, "Complete current calculation first", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Recalls value from memory (MR) Displays the stored memory value
+     */
+    private void memoryRecall() {
+        if (hasMemory) {
+            currentNumber = formatNumber(memoryValue);
+            isNewOperation = true;
+            updateDisplay(currentNumber);
+            Toast.makeText(this, "MR : " + currentNumber, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Memory is empty", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Clears memory (MC) Resets memory value to 0 and clears the flag
+     */
+    private void memoryClear() {
+        if (hasMemory) {
+            memoryValue = 0;
+            hasMemory = false;
+            saveMemoryToStorage();
+            Toast.makeText(this, "Memory cleared", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Memory is already empty", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Saves memory value to SharedPreferences storage
+     */
+    private void saveMemoryToStorage() {
+        SharedPreferences prefs = getSharedPreferences("calculator_prefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putFloat("memory_value", (float) memoryValue);
+        editor.putBoolean("has_memory", hasMemory);
+        editor.apply();
+    }
+
+    /**
+     * Loads memory value from SharedPreferences storage Called during app
+     * startup to restore previous memory state
+     */
+    private void loadMemoryFromStorage() {
+        SharedPreferences prefs = getSharedPreferences("calculator_prefs", MODE_PRIVATE);
+        memoryValue = prefs.getFloat("memory_value", 0);
+        hasMemory = prefs.getBoolean("has_memory", false);
+    }
+
+    // ===== Landscape-Specific Functions =====
+    /**
+     * Handles backspace - removes the last digit from current number
+     */
+    private void handleBackspace() {
+        if (!currentNumber.isEmpty()) {
+            currentNumber = currentNumber.substring(0, currentNumber.length() - 1);
+            if (currentNumber.isEmpty()) {
+                updateDisplay("0");
+            } else {
+                updateDisplay(currentNumber);
+            }
+        }
+    }
+
+    /**
+     * Toggles the sign of the current number (positive/negative)
+     */
+    private void handleNegate() {
+        if (!currentNumber.isEmpty()) {
+            try {
+                double value = Double.parseDouble(currentNumber);
+                value = -value;
+                currentNumber = formatNumber(value);
+                updateDisplay(currentNumber);
+                isNewOperation = true;
+            } catch (Exception e) {
+                Toast.makeText(this, "Invalid number", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    /**
+     * Calculates reciprocal (1/x) of the current number
+     */
+    private void calculateReciprocal() {
+        if (!currentNumber.isEmpty()) {
+            try {
+                double value = Double.parseDouble(currentNumber);
+                if (value == 0) {
+                    updateDisplay("Error");
+                    return;
+                }
+                double result = 1 / value;
+                String resultStr = formatNumber(result);
+                tvSecondary.setText("1/(" + formatNumber(value) + ")");
+                updateDisplay(resultStr);
+                currentNumber = resultStr;
+                isNewOperation = true;
+            } catch (Exception e) {
+                updateDisplay("Error");
+            }
+        }
+    }
+
+    /**
+     * Calculates square of the current number (x²)
+     */
+    private void calculateSquare() {
+        if (!currentNumber.isEmpty()) {
+            try {
+                double value = Double.parseDouble(currentNumber);
+                double result = value * value;
+                String resultStr = formatNumber(result);
+                tvSecondary.setText("(" + formatNumber(value) + ")²");
+                updateDisplay(resultStr);
+                currentNumber = resultStr;
+                isNewOperation = true;
+            } catch (Exception e) {
+                updateDisplay("Error");
+            }
+        }
+    }
+
+    /**
+     * Calculates cube of the current number (x³)
+     */
+    private void calculateCube() {
+        if (!currentNumber.isEmpty()) {
+            try {
+                double value = Double.parseDouble(currentNumber);
+                double result = value * value * value;
+                String resultStr = formatNumber(result);
+                tvSecondary.setText("(" + formatNumber(value) + ")³");
+                updateDisplay(resultStr);
+                currentNumber = resultStr;
+                isNewOperation = true;
+            } catch (Exception e) {
+                updateDisplay("Error");
+            }
+        }
+    }
+
+    /**
+     * Calculates absolute value of the current number (|x|)
+     */
+    private void calculateAbsolute() {
+        if (!currentNumber.isEmpty()) {
+            try {
+                double value = Double.parseDouble(currentNumber);
+                double result = Math.abs(value);
+                String resultStr = formatNumber(result);
+                tvSecondary.setText("|" + formatNumber(value) + "|");
+                updateDisplay(resultStr);
+                currentNumber = resultStr;
+                isNewOperation = true;
+            } catch (Exception e) {
+                updateDisplay("Error");
+            }
+        }
+    }
+
+    /**
+     * Handles parenthesis input with full evaluation support
+     *
+     * Behavior: - Adds opening parenthesis when count is 0 or after an operator
+     * - Adds closing parenthesis to close open groups - Tracks count of
+     * unmatched opening parentheses - Parentheses are part of the expression
+     * and evaluated properly
+     */
+    private void handleParenthesis() {
+        if (openParenthesisCount == 0 || lastInputWasOperator) {
+            // Add opening parenthesis
+            if (!currentNumber.isEmpty()) {
+                fullExpression += currentNumber + " ( ";
+            } else {
+                fullExpression += "( ";
+            }
+            currentNumber = "";
+            openParenthesisCount++;
+            lastInputWasOperator = false;
+        } else if (openParenthesisCount > 0) {
+            // Add closing parenthesis
+            if (!currentNumber.isEmpty()) {
+                fullExpression += currentNumber + " ) ";
+            } else {
+                fullExpression += " ) ";
+            }
+            currentNumber = "";
+            openParenthesisCount--;
+            lastInputWasOperator = false;
+        }
+
+        // Display the expression with parentheses
+        String displayText = fullExpression + currentNumber;
+        tvSecondary.setText(displayText);
+        updateDisplay(displayText);
+    }
+
+    // ===== Expression Evaluation with Proper Operator Precedence =====
+    /**
      * Evaluates a complete expression with proper operator precedence
-     * PEMDAS/BODMAS: Parentheses, Exponents, Multiplication/Division, Addition/Subtraction
-     * 
+     * PEMDAS/BODMAS: Parentheses, Exponents, Multiplication/Division,
+     * Addition/Subtraction
+     *
      * @param expression The mathematical expression to evaluate
      * @return The result of the evaluation
      */
@@ -669,6 +936,7 @@ public class MainActivity extends AppCompatActivity {
      * Implements proper operator precedence
      */
     private class ExpressionEvaluator {
+
         private String expression;
         private int position = 0;
 
@@ -677,7 +945,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         /**
-         * Main evaluation method - starts with lowest precedence (addition/subtraction)
+         * Main evaluation method - starts with lowest precedence
+         * (addition/subtraction)
          */
         double evaluate() throws Exception {
             return parseAdditionSubtraction();
@@ -775,8 +1044,8 @@ public class MainActivity extends AppCompatActivity {
         private double parseNumber() throws Exception {
             StringBuilder number = new StringBuilder();
 
-            while (position < expression.length() && 
-                   (Character.isDigit(peek()) || peek() == '.')) {
+            while (position < expression.length()
+                    && (Character.isDigit(peek()) || peek() == '.')) {
                 number.append(expression.charAt(position++));
             }
 

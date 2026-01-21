@@ -37,12 +37,36 @@ A modern, feature-rich Android calculator application inspired by Samsung's calc
   - `π` (Pi) ≈ 3.14159...
   - `e` (Euler's number) ≈ 2.71828...
 
+### 💾 Memory Functions
+
+- **M+ (Memory Add)**: Add current display value to memory
+- **M− (Memory Subtract)**: Subtract current display value from memory
+- **MR (Memory Recall)**: Retrieve value from memory and display it
+- **MC (Memory Clear)**: Clear memory and reset to zero
+- **Persistent Memory**: Memory values are saved automatically and restored when app restarts
+
+### 📐 Landscape Mode
+
+Landscape orientation provides additional functions for advanced calculations:
+
+- **Backspace (⌫)**: Remove the last digit from input
+- **Negate (+/−)**: Toggle between positive and negative values
+- **Reciprocal (1/x)**: Calculate reciprocal of current number
+- **Square (x²)**: Calculate square of current number
+- **Cube (x³)**: Calculate cube of current number
+- **Absolute Value (|x|)**: Calculate absolute value
+- **Parenthesis Support**: Full expression grouping with parentheses
+- **Optimized Layout**: Side-by-side display and controls for better usability
+
 ### 🎨 User Interface
 
 - **Dual Display System**:
   - Main display showing current input/result
   - Secondary display showing previous operation
 - **Toggle Modes**: Switch between Basic and Scientific calculator modes
+- **Adaptive Layout**:
+  - Portrait mode: Optimized for single-handed use
+  - Landscape mode: Enhanced with additional functions
 - **Material Design 3**: Modern, clean interface following Google's design guidelines
 - **Automatic Theme Detection**:
   - Light mode with bright, clean colors
@@ -278,11 +302,6 @@ Example: 5 + 3 × 2 = (auto-calculates 5+3=8, then 8×2=16)
 
 - Factorial limited to integers 0-20 to prevent overflow
 - Trigonometric functions use degree input (not radians)
-
-## 🚧 Future Enhancements
-
-- [ ] Landscape mode with more functions
-- [ ] Memory functions (M+, M-, MR, MC)
 
 ## 🤝 Contributing
 

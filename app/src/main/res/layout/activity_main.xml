@@ -113,6 +113,40 @@
         </LinearLayout>
     </HorizontalScrollView>
 
+    <!-- Memory Functions Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="@color/display_background">
+
+        <Button
+            android:id="@+id/btnMemoryAdd"
+            style="@style/MemoryButtonStyle"
+            android:text="M+"
+            android:layout_weight="1"/>
+
+        <Button
+            android:id="@+id/btnMemorySubtract"
+            style="@style/MemoryButtonStyle"
+            android:text="M−"
+            android:layout_weight="1"/>
+
+        <Button
+            android:id="@+id/btnMemoryRecall"
+            style="@style/MemoryButtonStyle"
+            android:text="MR"
+            android:layout_weight="1"/>
+
+        <Button
+            android:id="@+id/btnMemoryClear"
+            style="@style/MemoryButtonStyle"
+            android:text="MC"
+            android:layout_weight="1"/>
+
+    </LinearLayout>
+
     <!-- Button Grid -->
     <GridLayout
         android:layout_width="match_parent"
@@ -128,9 +162,9 @@
             android:text="AC"/>
 
         <Button
-            android:id="@+id/btnParenthesis"
+            android:id="@+id/btnHistory"
             style="@style/FunctionButtonStyle"
-            android:text="( )"/>
+            android:text="Hist"/>
 
         <Button
             android:id="@+id/btnPercent"
