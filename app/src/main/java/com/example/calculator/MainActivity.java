@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.DecimalFormat;
 import java.util.*;
+import java.math.BigInteger;
 
 /**
  * MainActivity - Samsung-style Calculator Application
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean lastInputWasOperator = false; // Tracks if last button pressed was an operator
     private int openParenthesisCount = 0; // Counter for unmatched parentheses
     private String fullExpression = "";   // Full expression for precedence evaluation
+    private boolean isDegrees = true;      // Angle unit toggle: true for degrees, false for radians
 
     // Formatter for displaying numbers with proper decimal places
     private final DecimalFormat decimalFormat = new DecimalFormat("#.##########");
@@ -158,6 +160,18 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnE).setOnClickListener(v -> insertConstant(Math.E));
         findViewById(R.id.btnFactorial).setOnClickListener(v -> calculateFactorial());
         findViewById(R.id.btnPower).setOnClickListener(v -> setOperator("^"));
+
+        // Angle unit toggle (DEG/RAD) if present in layout
+        View angleBtn = findViewById(R.id.btnAngleUnit);
+        if (angleBtn != null) {
+            Button b = (Button) angleBtn;
+            b.setText(isDegrees ? "DEG" : "RAD");
+            b.setOnClickListener(v -> {
+                isDegrees = !isDegrees;
+                b.setText(isDegrees ? "DEG" : "RAD");
+                Toast.makeText(this, isDegrees ? "Degrees" : "Radians", Toast.LENGTH_SHORT).show();
+            });
+        }
     }
 
     /**
@@ -338,27 +352,25 @@ public class MainActivity extends AppCompatActivity {
     private void calculateTrigonometric(String function) {
         if (!currentNumber.isEmpty()) {
             try {
-                double value = Double.parseDouble(currentNumber);
-                // Convert degrees to radians for trigonometric functions
-                double radians = Math.toRadians(value);
+                double input = Double.parseDouble(currentNumber);
+                double angleRad = isDegrees ? Math.toRadians(input) : input;
                 double result = 0;
 
-                // Calculate based on the function type
                 switch (function) {
                     case "sin":
-                        result = Math.sin(radians);
+                        result = Math.sin(angleRad);
                         break;
                     case "cos":
-                        result = Math.cos(radians);
+                        result = Math.cos(angleRad);
                         break;
                     case "tan":
-                        result = Math.tan(radians);
+                        result = Math.tan(angleRad);
                         break;
                 }
 
-                // Display the result and show the operation in secondary display
                 String resultStr = formatNumber(result);
-                tvSecondary.setText(function + "(" + formatNumber(value) + ")");
+                String unitSuffix = isDegrees ? "°" : " rad";
+                tvSecondary.setText(function + "(" + formatNumber(input) + unitSuffix + ")");
                 updateDisplay(resultStr);
                 currentNumber = resultStr;
                 isNewOperation = true;
@@ -438,20 +450,25 @@ public class MainActivity extends AppCompatActivity {
     private void calculateFactorial() {
         if (!currentNumber.isEmpty()) {
             try {
-                int value = (int) Double.parseDouble(currentNumber);
-                // Factorial restrictions: must be non-negative and not too large
-                if (value < 0 || value > 20) {
+                double dval = Double.parseDouble(currentNumber);
+                // Only allow non-negative integers
+                if (dval < 0 || dval != Math.floor(dval)) {
+                    updateDisplay("Error");
+                    return;
+                }
+                int value = (int) dval;
+                // Limit to prevent UI freezes due to extremely large outputs
+                if (value > 100) {
                     updateDisplay("Error");
                     return;
                 }
 
-                // Calculate factorial using iterative approach
-                long result = 1;
+                BigInteger result = BigInteger.ONE;
                 for (int i = 2; i <= value; i++) {
-                    result *= i;
+                    result = result.multiply(BigInteger.valueOf(i));
                 }
 
-                String resultStr = String.valueOf(result);
+                String resultStr = result.toString();
                 tvSecondary.setText(value + "!");
                 updateDisplay(resultStr);
                 currentNumber = resultStr;

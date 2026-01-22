@@ -298,11 +298,6 @@ Example: 5 + 3 × 2 = (auto-calculates 5+3=8, then 8×2=16)
 - Decimal numbers show up to 10 decimal places
 - Very large/small numbers handled gracefully
 
-## 🐛 Known Issues & Limitations
-
-- Factorial limited to integers 0-20 to prevent overflow
-- Trigonometric functions use degree input (not radians)
-
 ## 🤝 Contributing
 
 Contributions are welcome! Here's how you can help:

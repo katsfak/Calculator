@@ -110,6 +110,12 @@
                 android:id="@+id/btnPower"
                 style="@style/ScientificButtonStyle"
                 android:text="x^y"/>
+
+            <!-- Angle unit toggle -->
+            <Button
+                android:id="@+id/btnAngleUnit"
+                style="@style/ScientificButtonStyle"
+                android:text="DEG"/>
         </LinearLayout>
     </HorizontalScrollView>
 
